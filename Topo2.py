@@ -15,8 +15,8 @@ from multiprocessing import Process
 
 
 
-
-edges = [(1,2),(1,4),(2,3),(3,4)]
+#edges = [(1,2),(1,4),(2,3),(3,4)]
+edges = [(1,2),(1,4),(2,3),(3,4), (1,3)]
 class CompleteGraphTopo(Topo):
     def build(self):
     
