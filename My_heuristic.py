@@ -13,10 +13,13 @@ from ryu.topology import event, switches
 from ryu.topology.api import get_switch, get_link
 import networkx as nx
 import random
+import operator
 from ryu.lib.packet import vlan
 from collections import defaultdict
 
 # time_to_collect=1000000
+traffic_size = 700
+ratio = 0.5
 class SimpleSwitch13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
@@ -33,7 +36,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.DataPath = {}
         self.priority = {}
         self.IPv4 = {1:"10.0.0.1", 2:"10.0.0.2", 3:"10.0.0.3", 4:"10.0.0.4", 5:"10.0.0.5",
-                        6:"10.0.0.6", 7:"10.0.0.7", 8:"10.0.0.8", 9:"10.0.0.9", 10:"10.0.0.10"}
+                        6:"10.0.0.6", 7:"10.0.0.7", 8:"10.0.0.8", 9:"10.0.0.9", 10:"10.0.0.10", 11:"10.0.0.11", 12:"10.0.0.12"}
         
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -75,19 +78,9 @@ class SimpleSwitch13(app_manager.RyuApp):
                 edges_list.append((src.dpid,dst.dpid,{'port':src.port_no})) 
             self.net.add_edges_from(edges_list)   
         self.LinkNums += 1
-        if self.LinkNums == 20:
-            print("yesss")
-            self.get_all_pair_path()    
-            
-    def get_bottleneck_link(self,path):
-        path_bw = []
-        for i in range(len(path)-1):
-            s1 = path[i]
-            s2 = path[i+1]
-            port = self.adjacency[s1,s2]
-            path_bw.append(self.bandwidths[s1,port])
-        bottleneck_link = min(path_bw)
-        return bottleneck_link
+        if self.LinkNums == 38:
+            self.get_all_pair_path() 
+            self.heuristic()        
     
     def get_all_pair_path(self):
         nodes=self.net.nodes
@@ -98,6 +91,15 @@ class SimpleSwitch13(app_manager.RyuApp):
             if src!=dst:
                 paths = self.get_disjoint_paths(src,dst)
                 self.all_pair_path[src,dst] = paths
+                self.traffic_size[src,dst] = traffic_size
+        
+        for (i,j) in self.net.edges():
+            for (src,dst) in self.all_pair_path:
+                path1, path2 = copy.copy(self.all_pair_path[src,dst])
+                if (i,j) in list(zip(path1, path1[1:])):
+                    self.load[i,j] += ratio*self.traffic_size[src,dst] 
+                if (i,j) in list(zip(path2, path2[1:])):
+                    self.load[i,j] += ratio*self.traffic_size[src,dst] 
 
         for (src,dst) in self.all_pair_path:
             path1, path2 = copy.copy(self.all_pair_path[src,dst])
@@ -141,6 +143,37 @@ class SimpleSwitch13(app_manager.RyuApp):
                     if nx.has_path(newgraph,i,dst):             
                         backup_path = list(nx.shortest_path(newgraph,i,dst))
                         self.all_backup_path[src,dst][i].append(backup_path)
+     
+    def heuristic(self):
+        for (i,j) in self.net.edges:
+            affected_flows = []
+            new_load = copy.copy(self.load)
+            for (src,dst) in self.all_pair_path:
+                path1, path2 = copy.copy(self.all_pair_path[src,dst])
+                path_pairs1 = list(zip(path1, path1[1:]))
+                path_pairs1 = path_pairs1[1:]
+                path_pairs2 = list(zip(path2, path2[1:]))
+                path_pairs2 = path_pairs2[1:]
+                if (i,j) in path_pairs1:
+                    affected_flows.append((src,dst))                   
+                    for (p,q) in path_pairs1[path_pairs1.index((i,j))+1:]:
+                        new_load[p,q] -= ratio*self.traffic_size[src,dst] 
+                if (i,j) in path_pairs2:
+                    affected_flows.append((src,dst))
+                    for (p,q) in path_pairs2[path_pairs2.index((i,j))+1:]:
+                        new_load[p,q] -= ratio*self.traffic_size[src,dst] 
+            aux = {}        
+            for (src,dst) in affected_flows:
+                aux[src,dst] = self.traffic_size[src,dst] 
+            sorted_aux = dict(sorted(a.items(), key=operator.itemgetter(1)))
+            
+            for (src,dst) in sorted_aux:
+                BW = []
+                if len(self.all_backup_path[src,dst][i]) == 2:
+                    for path in self.all_backup_path[src,dst][i]:
+                        BW.append(self.get_bottleneck_link(path))
+                    self.weight[src,dst][i][0] = BW[0]
+                    self.weight[src,dst][i][1] = BW[1] 
         
     def get_disjoint_paths(self,src,dst):
         edge_disjoint_paths = list(nx.edge_disjoint_paths(self.net, src, dst))
@@ -148,6 +181,13 @@ class SimpleSwitch13(app_manager.RyuApp):
         path2 = edge_disjoint_paths[1]
         paths = [path1, path2]
         return paths
+    
+    def get_bottleneck_link(self,path):
+        path_bw = []
+        for (i,j) in list(zip(path, path[1:])):
+            path_bw.append(self.load[i,j])
+        bottleneck_link = min(path_bw)
+        return bottleneck_link
     
     def forwarding(self, msg, eth_type, ip_src, ip_dst):
         datapath = msg.datapath
@@ -220,7 +260,6 @@ class SimpleSwitch13(app_manager.RyuApp):
         
         intermidate = list(self.all_backup_path[src_sw,dst_sw].keys())
         print(intermidate)
-        # for i in range(len(self.all_backup_path[src_sw,dst_sw])):
         for i in intermidate:
             if len(self.all_backup_path[src_sw,dst_sw][i]) == 1:
                 self.GroupCounter[src_sw-1] += 1
@@ -288,8 +327,6 @@ class SimpleSwitch13(app_manager.RyuApp):
                     # self.add_flow(datapath, 1, match, actions,table=self.table_ID[curr])
                     self.add_flow(datapath, self.priority[curr], match, actions,table=0)
       
-    # For now: at the dst node one flow entry is added. The action 
-    # is sending packet to the appropriate uotport 
         datapath = self.DataPath[dst_sw]
         self.TableCounter[dst_sw-1] += 1
         self.table_ID[dst_sw] += 1
@@ -304,6 +341,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         return    
 
     @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
+    @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
     def link_failure_handler(self, ev):
         link = ev.link
         if "DOWN" not in str(link.src):
@@ -311,34 +349,32 @@ class SimpleSwitch13(app_manager.RyuApp):
         h1 = link.src.dpid
         h2 = link.dst.dpid
         print "Failure link:(",h1,",",h2,")"
-        print(h1,h2)
         modify = False
-        # for (src,dst) in self.all_pair_path:
-        src = 1
-        dst = 4
-        for i in range(len(self.all_pair_path[src,dst])):
-            path = copy.copy(self.all_pair_path[src,dst][i])
-            path = path[1:]
-            if (h1,h2) in list(zip(path, path[1:])):
-                print('Too1')
-                modify = True
-                intermidate = h1
-            if (h2,h1) in list(zip(path, path[1:])):
-                print('Too2')
-                modify = True
-                intermidate = h2
-            if modify:
-                datapath = self.DataPath[src]
-                parser = datapath.ofproto_parser
-                ofproto = datapath.ofproto
-                table_ID = int(src)*3+int(dst)*2+intermidate
-                print("===================")
-                inst=[parser.OFPInstructionGotoTable(table_ID)]
-                match = parser.OFPMatch(in_port=1, eth_type=2048, ipv4_src=self.IPv4[src], ipv4_dst=self.IPv4[dst])
-                mod = parser.OFPFlowMod(datapath=datapath, priority=200,
-                            match=match, instructions=inst, command = ofproto.OFPFC_MODIFY, table_id=0)
-                datapath.send_msg(mod)
-
+        for (src,dst) in self.all_pair_path:
+        # src = 1
+        # dst = 4
+            for i in range(len(self.all_pair_path[src,dst])):
+                path = copy.copy(self.all_pair_path[src,dst][i])
+                path = path[1:]
+                if (h1,h2) in list(zip(path, path[1:])):
+                    modify = True
+                    intermidate = h1
+                    print(intermidate)
+                if (h2,h1) in list(zip(path, path[1:])):
+                    modify = True
+                    intermidate = h2
+                    print(intermidate)
+                if modify:
+                    datapath = self.DataPath[src]
+                    parser = datapath.ofproto_parser
+                    ofproto = datapath.ofproto
+                    table_ID = int(src)*3+int(dst)*2+intermidate
+                    
+                    inst=[parser.OFPInstructionGotoTable(table_ID)]
+                    match = parser.OFPMatch(in_port=1, eth_type=2048, ipv4_src=self.IPv4[src], ipv4_dst=self.IPv4[dst])
+                    mod = parser.OFPFlowMod(datapath=datapath, priority=200,
+                                match=match, instructions=inst, command = ofproto.OFPFC_MODIFY, table_id=0)
+                    datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -348,7 +384,6 @@ class SimpleSwitch13(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         ip_pkt = pkt.get_protocol(ipv4.ipv4)
         if isinstance(ip_pkt, ipv4.ipv4):
-            print("2222222222222222222222")
             if ip_pkt.src == '0.0.0.0':
                 return 
             if len(pkt.get_protocols(ethernet.ethernet)):
@@ -372,5 +407,4 @@ class SimpleSwitch13(app_manager.RyuApp):
         out = self._build_packet_out(datapath, buffer_id,src_port, dst_port, data)
         if out:
             datapath.send_msg(out)
-    
-    
+   
