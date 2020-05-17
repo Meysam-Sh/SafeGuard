@@ -28,11 +28,14 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.net=nx.DiGraph()
         self.all_pair_path={}
         self.all_backup_path = defaultdict(dict)
+        self.weight = defaultdict(dict)
         self.group_id = {}
         self.table_ID = {}
         self.GroupCounter = []
         self.TableCounter = []
         self.LinkNums = 0
+        self.load = {}
+        self.traffic_size = {}
         self.DataPath = {}
         self.priority = {}
         self.IPv4 = {1:"10.0.0.1", 2:"10.0.0.2", 3:"10.0.0.3", 4:"10.0.0.4", 5:"10.0.0.5",
@@ -76,9 +79,12 @@ class SimpleSwitch13(app_manager.RyuApp):
                 src = link.src
                 dst = link.dst
                 edges_list.append((src.dpid,dst.dpid,{'port':src.port_no})) 
+                self.load[src.dpid,dst.dpid] = 0
             self.net.add_edges_from(edges_list)   
         self.LinkNums += 1
-        if self.LinkNums == 38:
+        if self.LinkNums == 20:
+            edges=self.net.edges()
+            edges = list(edges)
             self.get_all_pair_path() 
             self.heuristic()        
     
@@ -124,6 +130,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                 
             for (i,j) in path_pairs1[1:]:  
                 self.all_backup_path[src,dst][i] = [path2]
+                self.weight[src,dst][i] = [1]
                 aux = copy.copy(remaining_edges1)
                 aux.remove((i,j))
                 newgraph = nx.DiGraph()
@@ -131,10 +138,13 @@ class SimpleSwitch13(app_manager.RyuApp):
                 if i in newgraph.nodes():
                     if nx.has_path(newgraph,i,dst):             
                         backup_path = list(nx.shortest_path(newgraph,i,dst))
+                        print('back',backup_path)
                         self.all_backup_path[src,dst][i].append(backup_path) 
+                        self.weight[src,dst][i].append(1)
             
             for (i,j) in path_pairs2[1:]:
                 self.all_backup_path[src,dst][i] = [path1]
+                self.weight[src,dst][i] = [1]
                 aux = copy.copy(remaining_edges2)
                 aux.remove((i,j))
                 newgraph = nx.DiGraph()
@@ -143,11 +153,11 @@ class SimpleSwitch13(app_manager.RyuApp):
                     if nx.has_path(newgraph,i,dst):             
                         backup_path = list(nx.shortest_path(newgraph,i,dst))
                         self.all_backup_path[src,dst][i].append(backup_path)
-     
+                        self.weight[src,dst][i].append(1)
+        
     def heuristic(self):
-        for (i,j) in self.net.edges:
+        for (i,j) in self.net.edges():
             affected_flows = []
-            new_load = copy.copy(self.load)
             for (src,dst) in self.all_pair_path:
                 path1, path2 = copy.copy(self.all_pair_path[src,dst])
                 path_pairs1 = list(zip(path1, path1[1:]))
@@ -157,23 +167,31 @@ class SimpleSwitch13(app_manager.RyuApp):
                 if (i,j) in path_pairs1:
                     affected_flows.append((src,dst))                   
                     for (p,q) in path_pairs1[path_pairs1.index((i,j))+1:]:
-                        new_load[p,q] -= ratio*self.traffic_size[src,dst] 
+                        self.load[p,q] -= ratio*self.traffic_size[src,dst] 
                 if (i,j) in path_pairs2:
                     affected_flows.append((src,dst))
                     for (p,q) in path_pairs2[path_pairs2.index((i,j))+1:]:
-                        new_load[p,q] -= ratio*self.traffic_size[src,dst] 
+                        self.load[p,q] -= ratio*self.traffic_size[src,dst] 
             aux = {}        
             for (src,dst) in affected_flows:
                 aux[src,dst] = self.traffic_size[src,dst] 
-            sorted_aux = dict(sorted(a.items(), key=operator.itemgetter(1)))
+            sorted_aux = dict(sorted(aux.items(), key=operator.itemgetter(1)))
             
             for (src,dst) in sorted_aux:
                 BW = []
                 if len(self.all_backup_path[src,dst][i]) == 2:
                     for path in self.all_backup_path[src,dst][i]:
                         BW.append(self.get_bottleneck_link(path))
-                    self.weight[src,dst][i][0] = BW[0]
-                    self.weight[src,dst][i][1] = BW[1] 
+                    self.weight[src,dst][i] = [BW[0],BW[1]]
+                    
+                    
+                    path1, path2 = self.all_backup_path[src,dst][i]
+                    path_pairs1 = list(zip(path1, path1[1:]))
+                    path_pairs2 = list(zip(path2, path2[1:]))                  
+                    for (p,q) in path_pairs1:
+                        self.load[p,q] += BW[0]*self.traffic_size[src,dst] 
+                    for (p,q) in path_pairs2:
+                        self.load[p,q] += BW[1]*self.traffic_size[src,dst]                     
         
     def get_disjoint_paths(self,src,dst):
         edge_disjoint_paths = list(nx.edge_disjoint_paths(self.net, src, dst))
@@ -222,8 +240,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         # A SELECT group with three buckets. Each bucket tags the packet and then it points to a FFG
         actions_1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:01"), parser.OFPActionGroup(100)]
         actions_2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionGroup(200)]
-        # actions_1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:01"), parser.OFPActionOutput(out_port1)]
-        # actions_2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
+
         weight_1 = 50
         weight_2 = 50
         watch_group = ofproto_v1_3.OFPQ_ALL
@@ -259,33 +276,35 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.add_flow(datapath, 1, match, actions, table = table_ID)            
         
         intermidate = list(self.all_backup_path[src_sw,dst_sw].keys())
-        print(intermidate)
         for i in intermidate:
+            self.GroupCounter[src_sw-1] += 1
+            self.TableCounter[src_sw-1] += 1
+            group_id = int(src_sw)*3+int(dst_sw)*2+i
+            table_ID = int(src_sw)*3+int(dst_sw)*2+i
             if len(self.all_backup_path[src_sw,dst_sw][i]) == 1:
-                self.GroupCounter[src_sw-1] += 1
-                self.TableCounter[src_sw-1] += 1
-                group_id = int(src_sw)*3+int(dst_sw)*2+i
-                table_ID = int(src_sw)*3+int(dst_sw)*2+i                
-
                 if i in path1: 
-                    weight_1 = 0
-                    weight_2 = 1
+                    weight_1 = 10
+                    weight_2 = 90
                 else: 
-                    weight_1 = 1
-                    weight_2 = 0
-
-                actions_1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:01"), parser.OFPActionOutput(out_port1)]
-                actions_2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
-                watch_group = ofproto_v1_3.OFPQ_ALL
-                buckets = [
-                    parser.OFPBucket(weight_1, out_port1, watch_group, actions_1),
-                    parser.OFPBucket(weight_2, out_port2, watch_group, actions_2)]
-                req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD,ofproto.OFPGT_SELECT, group_id, buckets)
-                datapath.send_msg(req)    
+                    weight_1 = 90
+                    weight_2 = 10
+            else:     
+                weight_1 = self.weight[src_sw,dst_sw][i][0]
+                weight_2 = self.weight[src_sw,dst_sw][i][1]
                 
-                actions = [parser.OFPActionGroup(group_id)]
-                match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
-                self.add_flow(datapath, 1, match, actions, table = table_ID)
+            actions_1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:01"), parser.OFPActionOutput(out_port1)]
+            actions_2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
+            watch_group = ofproto_v1_3.OFPQ_ALL                              
+
+            buckets = [
+                parser.OFPBucket(weight_1, out_port1, watch_group, actions_1),
+                parser.OFPBucket(weight_2, out_port2, watch_group, actions_2)]
+            req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD,ofproto.OFPGT_SELECT, group_id, buckets)
+            datapath.send_msg(req)    
+            
+            actions = [parser.OFPActionGroup(group_id)]
+            match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
+            self.add_flow(datapath, 0, match, actions, table = table_ID)
         
         for i in range(len(self.all_pair_path[src_sw,dst_sw])):
             path1 = self.all_pair_path[src_sw,dst_sw][i]
@@ -294,10 +313,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                 prev = path1[path1.index(curr)-1]
                 in_port = self.net[curr][prev]['port']
                 self.priority[curr] += 1
-                if i == 0:
-                    match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
-                else:
-                    match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])                    
+                match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])                    
                 if len(self.all_backup_path[src_sw,dst_sw][curr]) == 2:
                     self.group_id[curr] += 1 
                     self.GroupCounter[curr-1] += 1
@@ -324,23 +340,20 @@ class SimpleSwitch13(app_manager.RyuApp):
                     next_sw = path1[path1.index(curr)+1]
                     out_port = self.net[curr][next_sw]['port']
                     actions = [parser.OFPActionOutput(out_port)]
-                    # self.add_flow(datapath, 1, match, actions,table=self.table_ID[curr])
                     self.add_flow(datapath, self.priority[curr], match, actions,table=0)
-      
+                    
         datapath = self.DataPath[dst_sw]
         self.TableCounter[dst_sw-1] += 1
         self.table_ID[dst_sw] += 1
         self.priority[dst_sw] += 1
         actions = [parser.OFPActionOutput(1)]
         match = parser.OFPMatch(eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
-        # self.add_flow(datapath, 1, match, actions,table=self.table_ID[dst_sw])
         self.add_flow(datapath, self.priority[dst_sw], match, actions,table=0)
     
         out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,data=msg.data, in_port=in_port, actions=actions)
         datapath.send_msg(out)     
         return    
 
-    @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
     @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
     def link_failure_handler(self, ev):
         link = ev.link
@@ -351,19 +364,20 @@ class SimpleSwitch13(app_manager.RyuApp):
         print "Failure link:(",h1,",",h2,")"
         modify = False
         for (src,dst) in self.all_pair_path:
-        # src = 1
-        # dst = 4
+            print("===")
+            print(src,dst)
             for i in range(len(self.all_pair_path[src,dst])):
                 path = copy.copy(self.all_pair_path[src,dst][i])
                 path = path[1:]
                 if (h1,h2) in list(zip(path, path[1:])):
+                    print("has")
                     modify = True
                     intermidate = h1
-                    print(intermidate)
                 if (h2,h1) in list(zip(path, path[1:])):
+                    print("has")
                     modify = True
                     intermidate = h2
-                    print(intermidate)
+                print("===")
                 if modify:
                     datapath = self.DataPath[src]
                     parser = datapath.ofproto_parser
@@ -388,23 +402,4 @@ class SimpleSwitch13(app_manager.RyuApp):
                 return 
             if len(pkt.get_protocols(ethernet.ethernet)):
                 eth_type = pkt.get_protocols(ethernet.ethernet)[0].ethertype
-                self.forwarding(msg, eth_type, ip_pkt.src, ip_pkt.dst)
-                
-    def _build_packet_out(self, datapath, buffer_id, src_port, dst_port, data):
-        actions = []
-        if dst_port:
-            actions.append(datapath.ofproto_parser.OFPActionOutput(dst_port))
-
-        msg_data = None
-        if buffer_id == datapath.ofproto.OFP_NO_BUFFER:
-            if data is None:
-                return None
-            msg_data = data
-        out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=buffer_id,data=msg_data, in_port=src_port, actions=actions)
-        return out
-        
-    def send_packet_out(self, datapath, buffer_id, src_port, dst_port, data):
-        out = self._build_packet_out(datapath, buffer_id,src_port, dst_port, data)
-        if out:
-            datapath.send_msg(out)
-   
+                self.forwarding(msg, eth_type, ip_pkt.src, ip_pkt.dst)    
