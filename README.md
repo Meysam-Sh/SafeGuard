@@ -1,6 +1,6 @@
 # Instruction for running SafeGuard
 
-This is a proactive failure recovery approach implementation.
+This is the implementation of SafeGuard, a proactive failure recovery approach in SDN.
 
 ## Setting up the environment:
  
