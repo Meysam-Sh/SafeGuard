@@ -1,8 +1,8 @@
-Instruction for runnig SafeGuard
+						## Instruction for runnig SafeGuard
 
 
 
-#Setting up the enviromnment:
+# Setting up the enviromnment:
  
 	--Download and install Mininet from http://mininet.org/download/
       
