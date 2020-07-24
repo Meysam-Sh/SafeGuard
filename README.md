@@ -6,7 +6,6 @@ This is a proactive failure recovery approach implementation.
  
 	Download and install Mininet from http://mininet.org/download/
 	Install Ryu controller in Mininet using "pip install Ryu" or from the source code in https://github.com/faucetsdn/ryu
-
 	Install CpqD software Switch from https://github.com/CPqD/ofsoftswitch13
 ## How to run SafeGurad:
 	Whenever you Run SafeGuard, you need to have two Mininet terminals open. 
