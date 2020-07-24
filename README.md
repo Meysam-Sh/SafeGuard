@@ -8,14 +8,14 @@ This is a proactive failure recovery approach implementation.
 	Install Ryu controller in Mininet using "pip install Ryu" or from the source code in https://github.com/faucetsdn/ryu
 	Install CpqD software Switch from https://github.com/CPqD/ofsoftswitch13
 ## How to run SafeGurad:
-	Whenever you Run SafeGuard, you need to have two Mininet terminals open. 
-	Run the topology script in one terminal using "sudo python B4.py (or ATT.py)"
-	Then run SafeGuard controller app in the other one using "ryu-manager --observe-links SafeGuard.py"
+Whenever you Run SafeGuard, you need to have two Mininet terminals open. 
+1.	Run the topology script in one terminal using "sudo python B4.py (or ATT.py)"
+2.	Then run SafeGuard controller app in the other one using "ryu-manager --observe-links SafeGuard.py"
 
 ## How to generate the link utilization results:
-	1) Create a list of random source-destination pairs 
+1. Create a list of random source-destination pairs 
 		*size of this list should be 60 for B4 and 200 for ATT network topology. 
-	2) Pass that list to "selected_piars" variable in both SafeGurd.py script and the topology script (B4.py or ATT.py)
+2. Pass that list to "selected_piars" variable in both SafeGurd.py script and the topology script (B4.py or ATT.py)
 	3) Run the topology script and then run SafeGuard controller app and 
 	4) Wait for all switches to get connected. At that time, you'll see 'all connected' output in the controller window. 
 	5) Run "My_Traffic()" command at the topology window. This will automatically fail a random link in the network. It will also generate UDP traffic using iperf between the list of pairs. 
