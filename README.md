@@ -16,7 +16,7 @@ This is a proactive failure recovery approach implementation.
 
 # How to generate the link ltilzation results:
 	1) Create a list of random soure-destination pairs 
-		**size of this list should be 60 for B4 and 200 for ATT network topology. 
+		*size of this list should be 60 for B4 and 200 for ATT network topology. 
 	2) Pass that list to "SelectedPiars" variable in both SafeGurd.py script and the topology script (B4.py or ATT.py)
 	3) Run the toplogy script and then run SafeGuard controller app and 
 	4) Wait for all switches to get connected. At that time you'll see 'all connected' oupput in the controller window. 
