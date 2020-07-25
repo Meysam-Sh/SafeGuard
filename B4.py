@@ -18,6 +18,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 from multiprocessing import Process
 
 edges = [(1,2),(1,4),(1,6),(2,3),(3,5),(4,5),(4,7),(4,8),(5,6),(6,7),(6,8),(7,8),(7,9),(8,10),(9,10),(9,11),(9,12),(10,11),(10,12)]
+
 selected_pairs = []
 
 nodes = [i for i in range(1,12)]
@@ -33,7 +34,7 @@ class CompleteGraphTopo(Topo):
             self.addLink(prev_switch,switch,cls=TCLink,bw=1000)
 
 def doIperf(src,dst):
-    port,time,startLoad=5001,240,50
+    port,time,startLoad=5001,30,50
     dst.cmd('sudo pkill iperf')
     dst.cmd(('iperf -s -p %s -u -D')%(port))
     
@@ -92,7 +93,7 @@ def runner():
     c = RemoteController('c','127.0.0.1',6653)
     net = Mininet( topo=topo,switch=UserSwitch,controller=c,autoSetMacs=True,autoStaticArp=True)
     net.start()
-    CLI.do_MyTraffic=myiperf
+    CLI.do_MyTraffic=MyTraffic
     CLI.do_PingPair=PingPair
     CLI(net)
     net.stop()
