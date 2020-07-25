@@ -33,7 +33,7 @@ class CompleteGraphTopo(Topo):
             self.addLink(prev_switch,switch,cls=TCLink,bw=1000)
 
 def doIperf(src,dst):
-    port,time,startLoad=5001,30,50
+    port,time,startLoad=5001,240,50
     dst.cmd('sudo pkill iperf')
     dst.cmd(('iperf -s -p %s -u -D')%(port))
     
