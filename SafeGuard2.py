@@ -65,25 +65,25 @@ class SimpleSwitch13(app_manager.RyuApp):
         for node in self.net.nodes():
             self.rules[node] = 0    
             
-    # events = [event.EventLinkAdd]
-    # @set_ev_cls(events)
-    # def get_topology(self, ev):
-        # self.net=nx.DiGraph()
-        # links = copy.copy(get_link(self, None)) 
-        # edges_list=[] 
-        # if len(links)>0:
-            # for link in links:
-                # src = link.src
-                # dst = link.dst
-                # edges_list.append((src.dpid,dst.dpid,{'port':src.port_no})) 
-                # self.load[src.dpid,dst.dpid] = 0
-            # self.net.add_edges_from(edges_list)  
-        # self.LinkNums += 1
-        # print('link  ', self.LinkNums)
-        # if self.LinkNums == 38 and self.reg == 12:
-            # print('links')           
-            # self.get_all_pair_path() 
-            # self.traffic_split()
+    events = [event.EventLinkAdd]
+    @set_ev_cls(events)
+    def get_topology(self, ev):
+        self.net=nx.DiGraph()
+        links = copy.copy(get_link(self, None)) 
+        edges_list=[] 
+        if len(links)>0:
+            for link in links:
+                src = link.src
+                dst = link.dst
+                edges_list.append((src.dpid,dst.dpid,{'port':src.port_no})) 
+                self.load[src.dpid,dst.dpid] = 0
+            self.net.add_edges_from(edges_list)  
+        self.LinkNums += 1
+        print('link  ', self.LinkNums)
+        if self.LinkNums == 38 and self.reg == 12:
+            print('links')           
+            self.get_all_pair_path() 
+            self.traffic_split()
             
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
