@@ -82,7 +82,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.LinkNums += 1
         print('link  ', self.LinkNums)
         if self.LinkNums == 38 and self.reg == 12:
-            print('links')           
+            print('**** ALL CONNECTED')           
             self.get_all_pair_path() 
             self.traffic_split()
             
