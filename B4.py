@@ -45,7 +45,7 @@ def doIperf(src,dst):
     except:
         pass
 
-#creates multi-threads for simultaneous traffic generation
+#creates multi-thread for simultaneous traffic generation
 def MyTraffic(self,line):
     net = self.mn
     thread =[]
