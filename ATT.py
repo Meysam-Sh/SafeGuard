@@ -21,7 +21,8 @@ edges = [(1,2),(1,3),(1,7),(1,8),(2,7),(3,4),(3,7),(3,10),(3,16),(3,17),(3,18),(
 
 selected_pairs = []
 
-class CompleteGraphTopo(Topo):
+class ATT(Topo):
+    # buliding the topology      
     def build(self):
         prev_switch=''
         for node in range(25):
@@ -33,6 +34,7 @@ class CompleteGraphTopo(Topo):
             switch='s%s'%(sw2)
             self.addLink(prev_switch,switch,cls=TCLink,bw=1000)
 
+# generate traffic between one source-detination pair
 def doIperf(src,dst):
     port,time,startLoad=5001,10,25
     dst.cmd('sudo pkill iperf')
@@ -43,6 +45,7 @@ def doIperf(src,dst):
     except:
         pass
 
+#creates multi-threads for simultaneous traffic generation
 def MyTraffic(self,line):
     net = self.mn
     thread =[]
@@ -70,6 +73,7 @@ def MyTraffic(self,line):
     elapsed = done - start
     print(elapsed) 
 
+# ping between selected pairs 
 def PingPair(self,line):
     net = self.mn
     counter = 0
@@ -85,8 +89,9 @@ def PingPair(self,line):
         print(output)
         print("*"*25)
 
+# runner of the topology
 def runner():
-    topo = CompleteGraphTopo()
+    topo = ATT()
     c = RemoteController('c','127.0.0.1',6653)
     net = Mininet( topo=topo,switch=UserSwitch,controller=c,autoSetMacs=True,autoStaticArp=True)
     net.start()
