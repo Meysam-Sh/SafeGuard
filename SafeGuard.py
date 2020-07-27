@@ -61,42 +61,34 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.DataPath = {}
         # self.monitor_thread = hub.spawn(self._monitor)
         self.priority = {}
-        self.net=nx.DiGraph()
-        edges_list = [(1, 6, {'port': 4}), (11, 10, {'port': 3}), (10, 11, {'port': 4}), (5, 4, {'port': 3}), (4, 1, {'port': 2}), (4, 8, {'port': 5}),
-        (8, 4, {'port': 2}), (5, 3, {  'port': 2}), (10, 9, {'port': 3}), (8, 7, {'port': 4}), (9, 7, {'port': 2}), (1, 2, {'port': 2}),
-        (9, 11, {'port': 4}), (4, 5, {'port': 3}), (10, 8, {'port': 2}  ), (7, 9, {'port': 5}), (1, 4, {'port': 3}), (8, 6, {'port': 3}),
-        (9, 10, {'port': 3}), (3, 2, {'port': 2}), (7, 4, {'port': 2}), (6, 8, {'port': 5}), (3, 5, {'port': 3}), (5, 6, {'port': 4}),
-        (8, 10, {'port': 5}), (11, 9, {'port': 2}), (7, 8, {'port': 4}), (4, 7, {'port': 4}), (2, 3, {'port': 3}), (6, 5, {'port': 3}),
-        (6, 1, {'port': 2}), (6, 7, {'port': 4}), (2, 1, {'port': 2}), (7, 6, {'port': 3}),(7, 6, {'port': 3}),(10, 12, {'port': 5}),
-        (12, 10, {'port': 3}),(9, 12, {'port': 5}),(12, 9, {'port': 2})]
-        
-        # edges_list = [(1, 2, {'port': 2}),(2, 1, {'port': 2}),(1, 3, {'port': 3}),(3, 1, {'port': 2}),(1, 4, {'port': 4}),(7, 1, {'port': 2}),(1, 8, {'port': 5}),(8, 1, {'port': 2}),(2, 7, {'port': 3}),(7, 2, {'port': 3}),(3, 4, {'port': 3}),(4, 3, {'port': 2}),(3, 7, {'port': 4}),(7, 3, {'port': 4}),(3, 10, {'port': 5}),(10, 3, {'port': 2}),(3, 16, {'port': 6}),(6, 3, {'port': 2}),(3, 17, {'port': 7}),(17, 3, {'port': 2}),(3, 18, {'port': 8}),(18, 3, {'port': 2}),(3, 21, {'port': 9}),(21, 3, {'port': 2}),(3, 22, {'port': 10}),(22, 3, {'port': 2}),(4, 7, {'port': 5}),(7, 4, {'port': 5}),(4, 9, {'port': 3}),(9, 4, {'port': 2}),(4, 10, {'port': 4}),(10, 4, {'port': 3}),(5, 6, {'port': 2}),(6, 5, {'port': 2}),(5, 8, {'port': 3}),(8, 5, {'port': 3}),(6, 8, {'port': 3}),(8, 6, {'port': 4}),(6, 9, {'port': 4}),(9, 6, {'port': 3}),(6, 10, {'port': 5}),(10, 6, {'port': 4}),(6, 14, {'port': 6}),(14, 6, {'port': 2}),(6, 15, {'port': 7}),(15, 6, {'port': 2}),(7, 8, {'port': 6}),(8, 7, {'port': 5}),(9, 10, {'port': 4}),(10, 9, {'port': 5}),(9, 14, {'port': 5}),(14, 9, {'port': 3}),(10, 14, {'port': 6}),(14, 10, {'port': 4}),(10, 17, {'port': 7}),(17, 10, {'port': 3}),(10, 23, {'port': 8}),(23, 10, {'port': 2}),(11, 12, {'port': 2}),(12, 11, {'port': 2}),(11, 14, {'port': 3}),(14, 11, {'port': 5}),(11, 15, {'port': 4}),(15, 11, {'port': 3}),(12, 13, {'port': 3}),(13, 12, {'port': 2}),(12, 14, {'port': 4}),(14, 12, {'port': 6}),(12, 15, {'port': 5}),(15, 12, {'port': 4}),(13, 14, {'port': 4}),(14, 13, {'port': 7}),(13, 25, {'port': 3}),(25, 13, {'port': 2}),(14, 16, {'port': 8}),(16, 14, {'port': 3}),(14, 17, {'port': 9}),(17, 14, {'port': 4}),(14, 18, {'port': 10}),(18, 14, {'port': 3}),(14, 23, {'port': 11}),(23, 14, {'port': 3}),(16, 17, {'port': 4}),(17, 16, {'port': 5}),(16, 18, {'port': 5}),(18, 16, {'port': 4}),(16, 22, {'port': 6}),(22, 16, {'port': 3}),(17, 18, {'port': 6}),(18, 17, {'port': 5}),(18, 19, {'port': 6}),(19, 18, {'port': 2}),(18, 20, {'port': 7}),(20, 18, {'port': 2}),(18, 21, {'port': 8}),(21, 18, {'port': 3}),(18, 22, {'port': 9}),(22, 18, {'port': 4}),(18, 23, {'port': 10}),(23, 18, {'port': 4}),(19, 22, {'port': 3}),(22, 19, {'port': 5}),(20, 21, {'port': 3}),(21, 20, {'port': 4}),(22, 23, {'port': 6}),(23, 22, {'port': 5}),(23, 24, {'port': 6}),(24, 23, {'port': 2}),(23, 25, {'port': 7}),(25, 23, {'port': 3}),(24, 25, {'port': 3}),(25, 24, {'port': 4})]
-        
-        self.IPv4 = {1:"10.0.0.1", 2:"10.0.0.2", 3:"10.0.0.3", 4:"10.0.0.4", 5:"10.0.0.5",6:"10.0.0.6", 7:"10.0.0.7", 8:"10.0.0.8", 9:"10.0.0.9", 10:"10.0.0.10", 11:"10.0.0.11", 12:"10.0.0.12"}
+        self.net=nx.DiGraph()  
+        self.IPv4 = {1:"10.0.0.1", 2:"10.0.0.2", 3:"10.0.0.3", 4:"10.0.0.4", 5:"10.0.0.5",6:"10.0.0.6", 7:"10.0.0.7", 8:"10.0.0.8", 9:"10.0.0.9", 10:"10.0.0.10",
+                     11:"10.0.0.11", 12:"10.0.0.12",13:"10.0.0.13", 14:"10.0.0.14", 15:"10.0.0.15", 16:"10.0.0.16", 17:"10.0.0.17", 18:"10.0.0.18", 17:"10.0.0.17",
+                     18:"10.0.0.8", 19:"10.0.0.19", 20:"10.0.0.20, 21:"10.0.0.21", 22:"10.0.0.22", 23:"10.0.0.23, 24:"10.0.0.24", 25:"10.0.0.25"}
         self.net.add_edges_from(edges_list)  
         for node in self.net.nodes():
             self.rules[node] = 0 
 
             
-    # events = [event.EventLinkAdd]
-    # @set_ev_cls(events)
-    # def get_topology(self, ev):
-        # self.net=nx.DiGraph()
-        # links = copy.copy(get_link(self, None)) 
-        # edges_list=[] 
-        # if len(links)>0:
-            # for link in links:
-                # src = link.src
-                # dst = link.dst
-                # edges_list.append((src.dpid,dst.dpid,{'port':src.port_no})) 
-                # self.load[src.dpid,dst.dpid] = 0
-            # self.net.add_edges_from(edges_list)  
-        # self.LinkNums += 1
-        # print('link  ', self.LinkNums)
-        # if self.LinkNums == 38 and self.reg == 12:
-            # print('links')           
-            # self.get_all_pair_path() 
-            # self.traffic_split()
+    events = [event.EventLinkAdd]
+    @set_ev_cls(events)
+    def get_topology(self, ev):
+        self.net=nx.DiGraph()
+        links = copy.copy(get_link(self, None)) 
+        edges_list=[] 
+        if len(links)>0:
+            for link in links:
+                src = link.src
+                dst = link.dst
+                edges_list.append((src.dpid,dst.dpid,{'port':src.port_no})) 
+                self.load[src.dpid,dst.dpid] = 0
+            self.net.add_edges_from(edges_list)  
+        self.LinkNums += 1
+        print('link  ', self.LinkNums)
+        if self.LinkNums == 38 and self.reg == 12:
+            print('links')           
+            self.get_all_pair_path() 
+            self.traffic_split()
             
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -116,10 +108,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.List.append(datapath.id)
         self.List.sort()
         self.List = list(set(self.List))
-        print(self.List,'len',len(self.List))
-        if self.reg == 12:
-            self.get_all_pair_path() 
-            self.traffic_split()            
+        print(self.List,'len',len(self.List))        
 
     def add_flow(self, dp, p, match, actions, table=0):
         ofproto = dp.ofproto
@@ -135,7 +124,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         for pair in pairs:
             src,dst=pair
             if src!=dst:
-                self.all_pair_path[src,dst] = self.get_disjoint_paths(src,dst)
+                self.all_pair_path[src,dst] = self.k_shortest_paths(self.net,src,dst,2)
                 self.traffic_size[src,dst] = traffic_size
                         
         for (src,dst) in self.all_pair_path:
@@ -190,9 +179,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                             # print(src,dst,portion,backup)
                             backup_path = portion[0:-1] + backup                       
                             self.all_backup_path[src,dst][i].append(backup_path)  
-        
-        # print(self.all_pair_path[1,12])
-        # print(self.all_backup_path[1,12])
+  
         aux = copy.copy(self.all_backup_path)
         for i in self.all_backup_path.keys():
             aux = self.all_backup_path[i]
@@ -200,8 +187,6 @@ class SimpleSwitch13(app_manager.RyuApp):
                 for k in range(len(aux[j])):
                     self.P.append(aux[j][k])
         self.P.sort(key=len)
-        print(self.all_pair_path[1,11])
-        print(self.all_backup_path[1,11])
         
     def traffic_split(self):
         for (i,j) in self.net.edges():
@@ -278,15 +263,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                     # for b in bw:
                         # weight = int(b/sum(bw))
                         # self.weight2[src,dst][i].append(weight)    
-        print('Finished')           
-        
-    def get_disjoint_paths(self,src,dst):
-        edge_disjoint_paths = list(nx.edge_disjoint_paths(self.net, src, dst))
-        edge_disjoint_paths.sort(key = len)
-        path1 = edge_disjoint_paths[0]
-        path2 = edge_disjoint_paths[1]
-        paths = [path1, path2]
-        return paths       
+        print('Finished')               
         
     def k_shortest_paths(self, G, source, target, k):
         return list(islice(nx.shortest_simple_paths(G, source, target), k))    
@@ -345,7 +322,6 @@ class SimpleSwitch13(app_manager.RyuApp):
         
         for path in self.all_pair_path[src_sw,dst_sw]:
             for i in path[1:-1]:
-                self.GroupCounter[src_sw-1] += 1
                 group_id = int(src_sw)*100+int(dst_sw)*50+31*i
                 l = len(self.weight1[src_sw,dst_sw][i])
                 buckets = []
@@ -394,8 +370,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                     elif len(s) == 1 and intermediate in path and path != Path:
                             next_sw2 = path[path.index(intermediate)+1]
                             out_port2 = self.net[intermediate][next_sw2]['port'] 
-                            self.group_id[intermediate] += 1                    
-                            self.GroupCounter[intermediate-1] += 1                             
+                            self.group_id[intermediate] += 1                                               
                             actions = [parser.OFPActionGroup(self.group_id[intermediate])]
                             self.add_flow(datapath, self.priority[intermediate], Match, actions, table = 0)                           
                             actions1 = [parser.OFPActionOutput(out_port1)]
@@ -418,8 +393,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                                     datapath = self.DataPath[j]
                                     prev = path1[path1.index(j)-1]
                                     in_port = self.net[j][prev]['port']
-                                    self.priority[j] -= 1
-                                    self.TableCounter[j-1] += 1                                   
+                                    self.priority[j] -= 1                                
                                     out_port = self.net[j][next_sw]['port']
                                     match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
                                     actions = [parser.OFPActionOutput(out_port)]
@@ -436,16 +410,14 @@ class SimpleSwitch13(app_manager.RyuApp):
                                     datapath = self.DataPath[j]
                                     prev = path2[path2.index(j)-1]
                                     in_port = self.net[j][prev]['port']
-                                    self.priority[j] -= 1
-                                    self.TableCounter[j-1] += 1                                   
+                                    self.priority[j] -= 1                                  
                                     out_port = self.net[j][next_sw]['port']
                                     match = parser.OFPMatch(in_port=in_port, eth_type=flow_info[0], ipv4_src=flow_info[1], ipv4_dst=flow_info[2])
                                     actions = [parser.OFPActionOutput(out_port)]
                                     self.add_flow(datapath, self.priority[j], match, actions, table = 0)                            
 
                         if add_group:
-                            self.group_id[intermediate] += 1                    
-                            self.GroupCounter[intermediate-1] += 1                             
+                            self.group_id[intermediate] += 1                                                
                             actions = [parser.OFPActionGroup(self.group_id[intermediate])]
                             self.add_flow(datapath, self.priority[intermediate], Match, actions, table = 0)                           
                             actions1 = [parser.OFPActionOutput(out_port1)]
@@ -466,9 +438,8 @@ class SimpleSwitch13(app_manager.RyuApp):
     
         out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,data=msg.data, in_port=in_port, actions=actions)
         datapath.send_msg(out)    
-        # print(sum(self.GroupCounter))
-        # print(sum(self.TableCounter),'\n\n')
-        # print('=========================')
+        print("==========number of rules==========")
+        print((sum(self.GroupCounter)+sum(self.TableCounter))/2)
         return    
 
     @set_ev_cls(event.EventLinkDelete, MAIN_DISPATCHER)
@@ -503,35 +474,35 @@ class SimpleSwitch13(app_manager.RyuApp):
                                 match=match, instructions=inst, command = ofproto.OFPFC_MODIFY, table_id=0)
                     datapath.send_msg(mod)
 
-    # def _monitor(self):
-        # while True:
-            # for dp in self.DataPath.values():
-                # if dp.id < 13:
-                    # self._request_stats(dp)
-            # hub.sleep(45)
+    def _monitor(self):
+        while True:
+            for dp in self.DataPath.values():
+                if dp.id < 13:
+                    self._request_stats(dp)
+            hub.sleep(45)
             
-    # def _request_stats(self, datapath):
-        # self.logger.debug('send stats request: %016x', datapath.id)
-        # ofproto = datapath.ofproto
-        # parser = datapath.ofproto_parser
+    def _request_stats(self, datapath):
+        self.logger.debug('send stats request: %016x', datapath.id)
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
 
-        # req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
-        # datapath.send_msg(req)
+        req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
+        datapath.send_msg(req)
 
-    # @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
-    # def _port_stats_reply_handler(self, ev):
-        # body = ev.msg.body
-        # self.logger.info('datapath         port     '
-                         # 'rx-pkts  rx-bytes rx-error '
-                         # 'tx-pkts  tx-bytes tx-error')
-        # self.logger.info('---------------- -------- '
-                         # '-------- -------- -------- '
-                         # '-------- -------- --------')
-        # for stat in sorted(body, key=attrgetter('port_no')):
-            # self.logger.info('%016x %8x %8d %8d %8d %8d %8d %8d',
-                             # ev.msg.datapath.id, stat.port_no,
-                             # stat.rx_packets, stat.rx_bytes, stat.rx_errors,
-                             # stat.tx_packets, stat.tx_bytes, stat.tx_errors)
+    @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
+    def _port_stats_reply_handler(self, ev):
+        body = ev.msg.body
+        self.logger.info('datapath         port     '
+                         'rx-pkts  rx-bytes rx-error '
+                         'tx-pkts  tx-bytes tx-error')
+        self.logger.info('---------------- -------- '
+                         '-------- -------- -------- '
+                         '-------- -------- --------')
+        for stat in sorted(body, key=attrgetter('port_no')):
+            self.logger.info('%016x %8x %8d %8d %8d %8d %8d %8d',
+                             ev.msg.datapath.id, stat.port_no,
+                             stat.rx_packets, stat.rx_bytes, stat.rx_errors,
+                             stat.tx_packets, stat.tx_bytes, stat.tx_errors)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
