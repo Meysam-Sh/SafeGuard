@@ -32,13 +32,17 @@ Whenever you Run SafeGuard, you need to have two Mininet terminals open.
 6.  The ping number along with its source-destination pair will appear in the topology window. 
 7. After all pings are finished, the total number of rules installed at the switches will appear in the controller window. 
 
+## How to generate the route stretch results for a specific number of flows: 
+1. Create a list of random source-destination pairs (size of this list could be 20, 30, 40, 50 and 60 in B4, and 40, 80, 120, 140, 160 and 200 in ATT.) 
+2. Pass that list to "selected_piars" variable in both SafeGurd.py script and the topology script (B4.py or ATT.py) 
+3. Run the topology and the controller and wait for all switches to get connected.  
+4. Run the “Ping_Pair()” command at the topology window. It will automatically ping between the host pairs from the list of selected_piars. 
+5. SafeGuard then installs all primary and backup rules at the switches needed to recover from any single link failure in the network. 
+6.  The ping number along with its source-destination pair will appear in the topology window. 
+7. After all pings are finished, the route stretch results will ouptput in the controller window. 
 
 
-# Contribute
-...
-# Acknowledgments
-...
-# Contact
-...
+
+
 
 	
