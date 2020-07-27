@@ -2,7 +2,6 @@
 
 from mininet.topo import Topo
 from mininet.net import Mininet
-from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 from mininet.node import Controller, RemoteController
 from mininet.log import setLogLevel
@@ -22,7 +21,8 @@ edges = [(1,2),(1,4),(1,6),(2,3),(3,5),(4,5),(4,7),(4,8),(5,6),(6,7),(6,8),(7,8)
 selected_pairs = []
 
 nodes = [i for i in range(1,12)]
-class CompleteGraphTopo(Topo):
+class B4(Topo):
+    # buliding the topology 
     def build(self):
         for node in range(16):
             switch = self.addSwitch('s%s'%(node+1))
@@ -33,6 +33,7 @@ class CompleteGraphTopo(Topo):
             switch='s%s'%(sw2)
             self.addLink(prev_switch,switch,cls=TCLink,bw=1000)
 
+# generate traffic between one source-detination pair
 def doIperf(src,dst):
     port,time,startLoad=5001,30,50
     dst.cmd('sudo pkill iperf')
@@ -44,6 +45,7 @@ def doIperf(src,dst):
     except:
         pass
 
+#creates multi-threads for simultaneous traffic generation
 def MyTraffic(self,line):
     net = self.mn
     thread =[]
@@ -71,8 +73,7 @@ def MyTraffic(self,line):
     elapsed = done - start
     print(elapsed) 
 
-    
-        
+# ping between selected pairs 
 def PingPair(self,line):
     net = self.mn
     counter = 0
@@ -88,8 +89,9 @@ def PingPair(self,line):
         print(output)
         print("*"*25)
 
+# runner of the topology
 def runner():
-    topo = CompleteGraphTopo()
+    topo = B4()
     c = RemoteController('c','127.0.0.1',6653)
     net = Mininet( topo=topo,switch=UserSwitch,controller=c,autoSetMacs=True,autoStaticArp=True)
     net.start()
