@@ -1,5 +1,4 @@
-from tmgen.models import modulated_gravity_tm, spike_tm, random_gravity_tm
-from tmgen import TrafficMatrix
+from tmgen.models import modulated_gravity_tm, TrafficMatrix, spike_tm, random_gravity_tm
  
 def Get_edges (topo):
     if topo == "B4":
@@ -24,8 +23,8 @@ def Get_edges (topo):
                       (75,79),(77,78),(78,79),(78,80),(78,80)]
         n= 84
         
-    elif topo == "Cognet":
-##### Cognet topology #####
+    elif topo == "Cogent":
+##### Cogent topology #####
         edges_list = [(1,177),(1,10),(2,9),(2,177),(2,115),(2,117),(2,176),(3,77),(3,78),(4,5),(4,78),(5,7),(5,136),(6,132),
                       (6,7),(7,8),(8,9),(8,175),(9,195),(9,10),(9,192),(11,12),(11,14),(12,17),(13,33),(13,14),(13,31),(14,17),
                       (14,16),(15,65),(15,130),(15,16),(17,18),(19,20),(19,31),(20,90),(20,69),(20,83),(21,22),(21,24),(22,27),
@@ -62,31 +61,9 @@ def Get_edges (topo):
          (150, 174),(151, 174), (154, 155), (152, 193), (152, 153), (153, 154), (156, 157), (156, 174), (157, 160), (159, 165), (161, 162), (162, 166), (164, 165),
          (165, 173),(178, 179), (181, 182), (180, 181), (182, 184), (187, 188), (188, 191), (191, 192), (192, 193)]	
         n = 193 
-    return edges_list, n, len(edges_list)*2
+    return edges_list, n
 
-def TMGeneration(n):
-    tm1 = modulated_gravity_tm(n,1,100)
-    tm2 = spike_tm(n,int(n/4),1)
-    tm3 = tm3 = random_gravity_tm(n,20)
-    print(tm1)
-    print("8888888")
-    print(tm2)
-    print("8888888")
-    print(tm3)
-    print("8888888")
-
-    flows = {}
-    for i in range(1,n+1):
-        for j in range(1,n+1):
-            if j != i:
-                print(i,j)  
-                flows[i,j,30] = tm1.matrix[j-1,i-1,0]
-                flows[i,j,20] = tm2.matrix[j-1,i-1,0]
-                flows[i,j,10] = tm3.matrix[j-1,i-1,0]
-
-
-    return(flows)
-
-
-
-
+    def TMGeneration(n):
+        tm1 = random_gravity_tm(n,50*(n^2+n))
+        tm2 = random_gravity_tm(n,30*(n^2+n))
+        tm3 = random_gravity_tm(n,20*(n^2+n))
