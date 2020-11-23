@@ -1,6 +1,6 @@
 # Instruction for running SafeGuard
 
-This is the implementation of SafeGuard, a proactive failure recovery approach in SDN.
+This is the implementation of SafeGuard, described in "SafeGuard: Congestion and Memory-aware Failure Recovery in SD-WAN" by Meysam Shojaee, Miguel Neves and Israat Haque, published in CNSM 2020.
 
 ## Setting up the environment:
  
