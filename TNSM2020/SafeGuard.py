@@ -136,7 +136,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             src,dst=pair
             if src!=dst:
                 paths = self.k_shortest_paths(self.net,src,dst,number_of_primary_paths)
-                paths(v, key = len)
+                paths = sorted(paths, key=len)
                 self.all_pair_path[src,dst] = paths
             # for i in range(paths):
                 # self.all_pair_path[src,dst,H[i]] = paths[i]
