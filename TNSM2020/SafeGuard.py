@@ -187,7 +187,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                         if nx.has_path(newgraph,i,dst):
                             backup_path = list(nx.shortest_path(newgraph,i,dst))
                             if len(portion): 
-                                backup_path = portion[0:-1] + backup                       
+                                backup_path += portion[0:-1]                       
                                 self.all_backup_path[src,dst][i].append(backup_path) 
         
     def traffic_split(self):
