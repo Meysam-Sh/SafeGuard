@@ -20,8 +20,6 @@ from ryu.lib.packet import vlan
 from collections import defaultdict
 from operator import attrgetter
 import initilization
-#import numpy as np
-
 
 # topo = raw_input("Select a topology")
 # edge_list, n, number_of_links = initilization.Get_edges(topo)
