@@ -301,9 +301,10 @@ class SimpleSwitch13(app_manager.RyuApp):
                    parser.OFPBucket(weight=1, actions= [parser.OFPActionGroup(group_id+3)]),]
         req = parser.OFPGroupMod(datapath, ofproto.OFPFC_ADD,ofproto.OFPGT_SELECT, group_id, buckets)
         datapath.send_msg(req)
-            
-        actions1 = [parser.OFPActionOutput(out_port1)]
-        actions2 = [parser.OFPActionOutput(out_port2)]
+        
+       
+        actions1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:01"), parser.OFPActionOutput(out_port1)]
+        actions2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
         watch_group = 0
         weight = 0
         buckets = [parser.OFPBucket(weight,out_port1,watch_group,actions1),
@@ -311,15 +312,15 @@ class SimpleSwitch13(app_manager.RyuApp):
         req = parser.OFPGroupMod(datapath,ofproto.OFPGC_ADD,ofproto.OFPGT_FF,group_id+1,buckets)                  
         datapath.send_msg(req)
         
-        actions1 = [parser.OFPActionOutput(out_port2)]
-        actions2 = [parser.OFPActionOutput(out_port3)]
+        actions1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
+        actions2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:03"), parser.OFPActionOutput(out_port3)]
         buckets = [parser.OFPBucket(weight,out_port2,watch_group,actions1),
                    parser.OFPBucket(weight,out_port3,watch_group,actions2)]                 
         req = parser.OFPGroupMod(datapath,ofproto.OFPGC_ADD,ofproto.OFPGT_FF,group_id+2,buckets)                  
         datapath.send_msg(req)        
 
-        actions1 = [parser.OFPActionOutput(out_port3)]
-        actions2 = [parser.OFPActionOutput(out_port2)]
+        actions1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:03"), parser.OFPActionOutput(out_port3)]
+        actions2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
         buckets = [parser.OFPBucket(weight,out_port3,watch_group,actions1),
                    parser.OFPBucket(weight,out_port2,watch_group,actions2)]                 
         req = parser.OFPGroupMod(datapath,ofproto.OFPGC_ADD,ofproto.OFPGT_FF,group_id+3,buckets)                  
@@ -353,8 +354,8 @@ class SimpleSwitch13(app_manager.RyuApp):
                 next_sw2 = path[path.index(intermediate)+1]  
                 out_port1 = self.net[intermediate][next_sw1]['port']                
                 out_port2 = self.net[intermediate][next_sw2]['port']                 
-                actions1 = [parser.OFPActionOutput(out_port1)]
-                actions2 = [parser.OFPActionOutput(out_port2)]
+                actions1 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:01"), parser.OFPActionOutput(out_port1)]
+                actions2 = [parser.OFPActionSetField(eth_src="00:00:00:00:00:02"), parser.OFPActionOutput(out_port2)]
                 prev = Path[Path.index(intermediate)-1]
                 in_port = self.net[intermediate][prev]['port']
                 self.priority[intermediate] -= 1
